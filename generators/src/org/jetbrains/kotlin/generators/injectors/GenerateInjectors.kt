@@ -35,6 +35,9 @@ import org.jetbrains.kotlin.types.expressions.ExpressionTypingComponents
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingUtils
 import org.jetbrains.kotlin.resolve.calls.CallResolver
 import org.jetbrains.kotlin.load.java.structure.impl.JavaPropertyInitializerEvaluatorImpl
+import org.jetbrains.kotlin.storage.LockBasedStorageManager
+import org.jetbrains.kotlin.load.kotlin.reflect.ReflectKotlinClassFinder
+import org.jetbrains.kotlin.load.java.reflect.ReflectJavaClassFinder
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
 import org.jetbrains.kotlin.load.kotlin.DeserializationComponentsForJava
@@ -53,7 +56,6 @@ import org.jetbrains.kotlin.types.DynamicTypesAllowed
 import org.jetbrains.kotlin.types.DynamicTypesSettings
 import org.jetbrains.kotlin.resolve.lazy.NoTopLevelDescriptorProvider
 import org.jetbrains.kotlin.resolve.lazy.NoFileScopeProvider
-import org.jetbrains.kotlin.types.expressions.LocalClassifierAnalyzer
 import org.jetbrains.kotlin.types.expressions.LocalClassDescriptorManager
 import org.jetbrains.kotlin.types.expressions.DeclarationScopeProviderForLocalClassifierAnalyzer
 import org.jetbrains.kotlin.types.expressions.LocalLazyDeclarationResolver
@@ -79,6 +81,7 @@ public fun createInjectorGenerators(): List<DependencyInjectorGenerator> =
                 generatorForLazyTopDownAnalyzerBasic(),
                 generatorForLazyLocalClassifierAnalyzer(),
                 generatorForTopDownAnalyzerForJvm(),
+                generatorForRuntimeDescriptorLoader(),
                 generatorForJavaDescriptorResolver(),
                 generatorForLazyResolveWithJava(),
                 generatorForTopDownAnalyzerForJs(),
@@ -145,6 +148,28 @@ private fun generatorForTopDownAnalyzerForJs() =
 private fun generatorForTopDownAnalyzerForJvm() =
         generator("compiler/frontend.java/src", DI_DEFAULT_PACKAGE, "InjectorForTopDownAnalyzerForJvm") {
             commonForJavaTopDownAnalyzer()
+        }
+
+private fun generatorForRuntimeDescriptorLoader() =
+        generator("core/descriptors.runtime.impl/src", DI_DEFAULT_PACKAGE, "InjectorForRuntimeDescriptorLoader") {
+            parameter<ClassLoader>()
+            publicParameter<ModuleDescriptor>()
+
+            publicField<JavaDescriptorResolver>()
+
+            field<RuntimeExternalSignatureResolver>()
+            field<RuntimeJavaResolverCache>()
+            field<RuntimeErrorReporter>()
+            field<RuntimeMethodSignatureChecker>()
+            field<RuntimeExternalAnnotationResolver>()
+            field<RuntimePropertyInitializerEvaluator>()
+            field<RuntimeSourceElementFactory>()
+            field<RuntimeSamConversionResolver>()
+            field<SingleModuleClassResolver>()
+
+            field<LockBasedStorageManager>()
+            field<ReflectJavaClassFinder>()
+            field<ReflectKotlinClassFinder>()
         }
 
 private fun generatorForJavaDescriptorResolver() =
