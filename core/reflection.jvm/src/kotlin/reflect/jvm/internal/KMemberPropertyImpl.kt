@@ -18,6 +18,8 @@ package kotlin.reflect.jvm.internal
 
 import java.lang.reflect.*
 import kotlin.reflect.*
+import org.jetbrains.kotlin.descriptors.PropertyDescriptor
+import org.jetbrains.kotlin.name.Name
 
 // TODO: properties of built-in classes
 
@@ -25,30 +27,41 @@ open class KMemberPropertyImpl<T : Any, out R>(
         override val name: String,
         protected val owner: KClassImpl<T>
 ) : KMemberProperty<T, R>, KPropertyImpl<R> {
-    // TODO: extract, make lazy (weak?), use our descriptors knowledge
-    override val field: Field?
-    override val getter: Method?
+    val descriptor: PropertyDescriptor by Delegates.lazySoft {
+        val properties = owner.descriptor.getDefaultType().getMemberScope().getProperties(Name.identifier(name))
+        // TODO: handle cases when many or no properties are found
+        properties.single() as PropertyDescriptor
+    }
 
-    {
+    // TODO: extract, use our descriptors knowledge
+    override val field: Field? by Delegates.lazySoft {
         try {
-            field = owner.jClass.getDeclaredField(name)
+            owner.jClass.getDeclaredField(name)
         }
         catch (e: NoSuchFieldException) {
-            field = null
+            null
         }
+    }
 
+    override val getter: Method? by Delegates.lazySoft {
         try {
-            getter = owner.jClass.getMaybeDeclaredMethod(getterName(name))
+            println("property $name\nnaiveGetterName ${naiveGetterName(name)}\ngetterName ${getterName(descriptor)}\ndescriptor $descriptor\n")
+            owner.jClass.getMaybeDeclaredMethod(getterName(descriptor))
         }
         catch (e: NoSuchMethodException) {
-            if (field == null) throw NoSuchPropertyException(e)
-            getter = null
+            null
         }
+    }
+
+    ;{
+        // TODO: this compromises laziness, consider not doing it on creation and instead support isValid()
+        if (field == null && getter == null) throw NoSuchPropertyException()
     }
 
     override fun get(receiver: T): R {
         try {
-            return (if (getter != null) getter!!(receiver) else field!!.get(receiver)) as R
+            val getter = getter
+            return (if (getter != null) getter(receiver) else field!!.get(receiver)) as R
         }
         catch (e: java.lang.IllegalAccessException) {
             throw kotlin.reflect.IllegalAccessException(e)
@@ -70,22 +83,25 @@ class KMutableMemberPropertyImpl<T : Any, R>(
         name: String,
         owner: KClassImpl<T>
 ) : KMutableMemberProperty<T, R>, KMutablePropertyImpl<R>, KMemberPropertyImpl<T, R>(name, owner) {
-    override val setter: Method?
-
-    {
+    override val setter: Method? by Delegates.lazySoft {
         try {
+            val getter = getter
             val returnType = if (getter != null) getter.getReturnType() else field!!.getType()
-            setter = owner.jClass.getMaybeDeclaredMethod(setterName(name), returnType)
+            owner.jClass.getMaybeDeclaredMethod(naiveSetterName(name), returnType)
         }
         catch (e: NoSuchMethodException) {
-            if (field == null) throw NoSuchPropertyException(e)
-            setter = null
+            null
         }
+    }
+
+    ;{
+        if (field == null && setter == null) throw NoSuchPropertyException()
     }
 
     override fun set(receiver: T, value: R) {
         try {
-            if (setter != null) setter!!(receiver, value) else field!!.set(receiver, value)
+            val setter = setter
+            if (setter != null) setter(receiver, value) else field!!.set(receiver, value)
         }
         catch (e: java.lang.IllegalAccessException) {
             throw kotlin.reflect.IllegalAccessException(e)

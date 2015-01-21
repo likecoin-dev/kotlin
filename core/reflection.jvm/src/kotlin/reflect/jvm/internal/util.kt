@@ -17,14 +17,35 @@
 package kotlin.reflect.jvm.internal
 
 import java.lang.reflect.Method
+import org.jetbrains.kotlin.descriptors.PropertyDescriptor
+import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedPropertyDescriptor
+import org.jetbrains.kotlin.serialization.jvm.JvmProtoBuf
 
 private fun String.capitalizeWithJavaBeanConvention(): String {
     if (length() > 1 && Character.isUpperCase(this[1])) return this
     return Character.toUpperCase(this[0]) + substring(1, length())
 }
 
-private fun getterName(propertyName: String): String = "get" + propertyName.capitalizeWithJavaBeanConvention()
-private fun setterName(propertyName: String): String = "set" + propertyName.capitalizeWithJavaBeanConvention()
+private fun naiveGetterName(propertyName: String): String = "get" + propertyName.capitalizeWithJavaBeanConvention()
+private fun naiveSetterName(propertyName: String): String = "set" + propertyName.capitalizeWithJavaBeanConvention()
+
+private fun getterName(descriptor: PropertyDescriptor): String {
+    // TODO: don't do instanceof, instead check origin of the declaring (not enclosing!) class
+    when (descriptor) {
+        is DeserializedPropertyDescriptor -> {
+            val proto = descriptor.proto
+            if (proto.hasExtension(JvmProtoBuf.propertySignature)) {
+                val signature = proto.getExtension(JvmProtoBuf.propertySignature)
+                if (signature.hasGetter()) {
+                    return descriptor.nameResolver.getString(signature.getGetter().getName())
+                }
+            }
+        }
+    }
+    // Else it's a foreign property, e.g. from Java
+    return naiveGetterName(descriptor.getName().asString())
+}
+
 
 
 private fun Class<*>.getMaybeDeclaredMethod(name: String, vararg parameterTypes: Class<*>): Method {

@@ -24,8 +24,10 @@ public class IllegalAccessException(cause: java.lang.IllegalAccessException) : E
 }
 
 suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-public class NoSuchPropertyException(cause: Exception) : Exception() {
+public class NoSuchPropertyException(cause: Exception? = null) : Exception() {
     {
-        (this as java.lang.Throwable).initCause(cause)
+        if (cause != null) {
+            (this as java.lang.Throwable).initCause(cause)
+        }
     }
 }

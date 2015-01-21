@@ -28,7 +28,7 @@ open class KTopLevelExtensionPropertyImpl<T, out R>(
 
     // TODO: extract, make lazy (weak?), use our descriptors knowledge, support Java fields
     override val getter: Method = try {
-        owner.jClass.getMethod(getterName(name), receiverClass)
+        owner.jClass.getMethod(naiveGetterName(name), receiverClass)
     }
     catch (e: NoSuchMethodException) {
         throw NoSuchPropertyException(e)
@@ -60,7 +60,7 @@ class KMutableTopLevelExtensionPropertyImpl<T, R>(
         receiverClass: Class<T>
 ) : KMutableTopLevelExtensionProperty<T, R>, KMutablePropertyImpl<R>, KTopLevelExtensionPropertyImpl<T, R>(name, owner, receiverClass) {
     override val setter: Method = try {
-        owner.jClass.getMethod(setterName(name), receiverClass, getter.getReturnType())
+        owner.jClass.getMethod(naiveSetterName(name), receiverClass, getter.getReturnType())
     }
     catch (e: NoSuchMethodException) {
         throw NoSuchPropertyException(e)

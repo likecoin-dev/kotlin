@@ -28,7 +28,7 @@ open class KTopLevelVariableImpl<out R>(
 
     // TODO: extract, make lazy (weak?), use our descriptors knowledge, support Java fields
     override val getter: Method = try {
-        owner.jClass.getMethod(getterName(name))
+        owner.jClass.getMethod(naiveGetterName(name))
     }
     catch (e: NoSuchMethodException) {
         throw NoSuchPropertyException(e)
@@ -59,7 +59,7 @@ class KMutableTopLevelVariableImpl<R>(
         owner: KPackageImpl
 ) : KMutableTopLevelVariable<R>, KMutableVariableImpl<R>, KTopLevelVariableImpl<R>(name, owner) {
     override val setter: Method = try {
-        owner.jClass.getMethod(setterName(name), getter.getReturnType())
+        owner.jClass.getMethod(naiveSetterName(name), getter.getReturnType())
     }
     catch (e: NoSuchMethodException) {
         throw NoSuchPropertyException(e)
