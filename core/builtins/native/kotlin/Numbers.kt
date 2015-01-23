@@ -27,6 +27,12 @@ public abstract class Number {
 }
 
 public class Double private () : Number, Comparable<Double> {
+    class object : DoubleDefaultObject, Parsable<Double> {
+        val POSITIVE_INFINITY: Double
+        val NEGATIVE_INFINITY: Double
+        val NaN: Double
+    }
+
     public override fun compareTo(other: Double): Int
     public fun compareTo(other: Float): Int
     public fun compareTo(other: Long) : Int
@@ -247,6 +253,8 @@ public class Long private () : Number, Comparable<Long> {
 }
 
 public class Int private () : Number, Comparable<Int> {
+    class object : IntDefaultObject, Parsable<Int>
+
     public fun compareTo(other: Double): Int
     public fun compareTo(other: Float) : Int
     public fun compareTo(other: Long)  : Int

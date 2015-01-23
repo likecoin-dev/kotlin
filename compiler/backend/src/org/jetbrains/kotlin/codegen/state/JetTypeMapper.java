@@ -37,6 +37,7 @@ import org.jetbrains.kotlin.load.kotlin.PackagePartClassUtils;
 import org.jetbrains.kotlin.load.kotlin.nativeDeclarations.NativeDeclarationsPackage;
 import org.jetbrains.kotlin.name.FqName;
 import org.jetbrains.kotlin.name.FqNameUnsafe;
+import org.jetbrains.kotlin.name.Name;
 import org.jetbrains.kotlin.name.SpecialNames;
 import org.jetbrains.kotlin.psi.JetFile;
 import org.jetbrains.kotlin.resolve.BindingContext;
@@ -287,6 +288,19 @@ public class JetTypeMapper {
             }
 
             return Type.getType("[" + boxType(mapType(memberType, kind)).getDescriptor());
+        }
+
+        if (descriptor instanceof ClassDescriptor && ((ClassDescriptor) descriptor).getKind() == ClassKind.CLASS_OBJECT) {
+            DeclarationDescriptor containingDeclaration = descriptor.getContainingDeclaration();
+            if (containingDeclaration instanceof ClassDescriptor &&
+                KotlinBuiltIns.isPrimitiveType(((ClassDescriptor) containingDeclaration).getDefaultType())) {
+
+
+                Name name = Name.identifier(containingDeclaration.getName().asString() + "DefaultObjectImpl");
+                FqName fqName = new FqName("kotlin.jvm").child(name);
+
+                return AsmUtil.asmTypeByFqNameWithoutInnerClasses(fqName);
+            }
         }
 
         if (descriptor instanceof ClassDescriptor) {

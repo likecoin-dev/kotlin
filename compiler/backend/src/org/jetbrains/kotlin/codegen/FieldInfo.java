@@ -35,7 +35,16 @@ public class FieldInfo {
         ClassDescriptor ownerDescriptor = kind == ClassKind.OBJECT
                                           ? classDescriptor
                                           : DescriptorUtils.getParentOfType(classDescriptor, ClassDescriptor.class);
+
         assert ownerDescriptor != null : "Owner not found for class: " + classDescriptor;
+
+        if (kind == ClassKind.CLASS_OBJECT &&
+                (DescriptorUtils.getFqName(ownerDescriptor).asString().equals("kotlin.Int") ||
+                 DescriptorUtils.getFqName(ownerDescriptor).asString().equals("kotlin.Double"))) {
+            Type ownerType = typeMapper.mapType(classDescriptor);
+            return new FieldInfo(ownerType, ownerType, JvmAbi.INSTANCE_FIELD, true);
+        }
+
         Type ownerType = typeMapper.mapType(ownerDescriptor);
 
         String fieldName = kind == ClassKind.ENUM_ENTRY
