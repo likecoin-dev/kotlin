@@ -54,7 +54,7 @@ import org.jetbrains.kotlin.types.DynamicTypesSettings
 import org.jetbrains.kotlin.resolve.lazy.NoTopLevelDescriptorProvider
 import org.jetbrains.kotlin.resolve.lazy.NoFileScopeProvider
 import org.jetbrains.kotlin.types.expressions.LocalClassifierAnalyzer
-import org.jetbrains.kotlin.types.expressions.LocalClassDescriptorManager
+import org.jetbrains.kotlin.types.expressions.LocalClassDescriptorHolder
 import org.jetbrains.kotlin.types.expressions.DeclarationScopeProviderForLocalClassifierAnalyzer
 import org.jetbrains.kotlin.types.expressions.LocalLazyDeclarationResolver
 
@@ -107,7 +107,7 @@ private fun generatorForLazyLocalClassifierAnalyzer() =
             parameter<ModuleDescriptor>(name = "module", useAsContext = true)
             parameter<AdditionalCheckerProvider>()
             parameter<DynamicTypesSettings>()
-            parameter<LocalClassDescriptorManager>()
+            parameter<LocalClassDescriptorHolder>()
 
             publicField<LazyTopDownAnalyzer>()
 
