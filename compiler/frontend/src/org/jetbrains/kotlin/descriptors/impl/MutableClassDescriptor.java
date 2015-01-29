@@ -96,6 +96,11 @@ public class MutableClassDescriptor extends ClassDescriptorBase implements Class
         return classObjectDescriptor;
     }
 
+    public void setClassObjectDescriptor(@NotNull MutableClassDescriptor classObjectDescriptor) {
+        assert this.classObjectDescriptor == null : "classObjectDescriptor already assigned in " + this;
+        this.classObjectDescriptor = classObjectDescriptor;
+    }
+
     @NotNull
     @Override
     public Annotations getAnnotations() {
