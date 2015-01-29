@@ -16,7 +16,6 @@
 
 package org.jetbrains.kotlin.js.facade;
 
-import com.google.common.base.Predicates;
 import com.google.dart.compiler.backend.js.ast.JsNode;
 import com.google.dart.compiler.backend.js.ast.JsProgram;
 import com.google.dart.compiler.util.TextOutputImpl;
@@ -24,7 +23,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiFile;
 import com.intellij.util.Consumer;
 import com.intellij.util.Function;
 import com.intellij.util.SmartList;
@@ -164,7 +162,7 @@ public final class K2JSTranslator {
     public JsProgram generateProgram(@NotNull List<JetFile> filesToTranslate,
             @NotNull MainCallParameters mainCallParameters)
             throws TranslationException {
-        AnalysisResult analysisResult = TopDownAnalyzerFacadeForJS.analyzeFiles(filesToTranslate, Predicates.<PsiFile>alwaysTrue(), config);
+        AnalysisResult analysisResult = TopDownAnalyzerFacadeForJS.analyzeFiles(filesToTranslate, config);
         BindingContext bindingContext = analysisResult.getBindingContext();
         TopDownAnalyzerFacadeForJS.checkForErrors(Config.withJsLibAdded(filesToTranslate, config), bindingContext);
         ModuleDescriptor moduleDescriptor = analysisResult.getModuleDescriptor();

@@ -16,7 +16,6 @@
 
 package org.jetbrains.kotlin.idea.references;
 
-import com.google.common.base.Predicates;
 import com.google.common.collect.Sets;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.AbstractProjectComponent;
@@ -100,7 +99,7 @@ public class BuiltInsReferenceResolver extends AbstractProjectComponent {
                 TopDownAnalysisParameters topDownAnalysisParameters = TopDownAnalysisParameters.create(
                         globalContext.getStorageManager(),
                         globalContext.getExceptionTracker(),
-                        Predicates.<PsiFile>alwaysFalse(), true, false);
+                        true, false);
                 ModuleDescriptorImpl module = new ModuleDescriptorImpl(
                         Name.special("<fake_module>"), Collections.<ImportPath>emptyList(), PlatformToKotlinClassMap.EMPTY);
                 module.addDependencyOnModule(module);
