@@ -53,6 +53,8 @@ public class AnnotationDeserializer(private val module: ModuleDescriptor) {
         return AnnotationDescriptorImpl(annotationClass.getDefaultType(), arguments)
     }
 
+    public fun resolvePropertyValue(value: Value, nameResolver: NameResolver): CompileTimeConstant<*> = resolveValue(null, value, nameResolver)
+
     private fun resolveArgument(
             proto: Argument,
             parameterByName: Map<Name, ValueParameterDescriptor>,
@@ -63,7 +65,7 @@ public class AnnotationDeserializer(private val module: ModuleDescriptor) {
     }
 
     private fun resolveValue(
-            expectedType: JetType,
+            expectedType: JetType?,
             value: Value,
             nameResolver: NameResolver
     ): CompileTimeConstant<*> {
@@ -90,7 +92,8 @@ public class AnnotationDeserializer(private val module: ModuleDescriptor) {
                 AnnotationValue(deserializeAnnotation(value.getAnnotation(), nameResolver))
             }
             Type.ARRAY -> {
-                if (!KotlinBuiltIns.isArray(expectedType) &&
+                if (expectedType != null &&
+                    !KotlinBuiltIns.isArray(expectedType) &&
                     !KotlinBuiltIns.isPrimitiveArray(expectedType)) return ErrorValue.create("Unexpected argument value")
 
                 val arrayElements = value.getArrayElementList()
@@ -102,13 +105,13 @@ public class AnnotationDeserializer(private val module: ModuleDescriptor) {
                             builtIns.getArrayType(Variance.INVARIANT, actualElementType)
                         }
                         else {
-                            // In the case of empty array, no element has the element type, so we fall back to the expected type.
+                            // In the case of empty array, no element has the element type, so we fall back to the expected type, if any.
                             // This is not very accurate when annotation class has been changed without recompiling clients,
                             // but should not in fact matter because the value is empty anyway
-                            expectedType
+                            expectedType ?: builtIns.getArrayType(Variance.INVARIANT, builtIns.getAnyType())
                         }
 
-                val expectedElementType = builtIns.getArrayElementType(expectedType)
+                val expectedElementType = builtIns.getArrayElementType(expectedType ?: actualArrayType)
 
                 ArrayValue(
                         arrayElements.map { resolveValue(expectedElementType, it, nameResolver) },
@@ -119,7 +122,7 @@ public class AnnotationDeserializer(private val module: ModuleDescriptor) {
             else -> error("Unsupported annotation argument type: ${value.getType()} (expected $expectedType)")
         }
 
-        if (result.getType(builtIns) != expectedType) {
+        if (expectedType != null && result.getType(builtIns) != expectedType) {
             // This means that an annotation class has been changed incompatibly without recompiling clients
             return ErrorValue.create("Unexpected argument value")
         }

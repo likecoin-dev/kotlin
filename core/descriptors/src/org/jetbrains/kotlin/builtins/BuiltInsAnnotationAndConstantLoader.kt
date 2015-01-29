@@ -63,7 +63,7 @@ class BuiltInsAnnotationAndConstantLoader(
             nameResolver: NameResolver,
             kind: AnnotatedCallableKind
     ): CompileTimeConstant<*>? {
-        // TODO: support deserialization of compile time constants in built-ins when needed
-        throw UnsupportedOperationException()
+        val value = proto.getExtension(BuiltInsProtoBuf.compileTimeValue)
+        return deserializer.resolvePropertyValue(value, nameResolver)
     }
 }
