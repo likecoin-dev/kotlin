@@ -41,55 +41,7 @@ import org.jetbrains.kotlin.load.kotlin.DeserializedResolverUtils
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.JVMConfigurationKeys
-import org.jetbrains.kotlin.resolve.constants.NullValue
-import org.jetbrains.kotlin.builtins.KotlinBuiltIns
-
-private object BuiltInsSerializerExtension : SerializerExtension() {
-    override fun serializeClass(descriptor: ClassDescriptor, proto: ProtoBuf.Class.Builder, stringTable: StringTable) {
-        for (annotation in descriptor.getAnnotations()) {
-            proto.addExtension(BuiltInsProtoBuf.classAnnotation, AnnotationSerializer.serializeAnnotation(annotation, stringTable))
-        }
-    }
-
-    override fun serializePackage(
-            packageFragments: Collection<PackageFragmentDescriptor>,
-            proto: ProtoBuf.Package.Builder,
-            stringTable: StringTable
-    ) {
-        val classes = packageFragments.flatMap {
-            it.getMemberScope().getDescriptors(DescriptorKindFilter.CLASSIFIERS).filterIsInstance<ClassDescriptor>()
-        }
-
-        for (descriptor in DescriptorSerializer.sort(classes)) {
-            proto.addExtension(BuiltInsProtoBuf.className, stringTable.getSimpleNameIndex(descriptor.getName()))
-        }
-    }
-
-    override fun serializeCallable(
-            callable: CallableMemberDescriptor,
-            proto: ProtoBuf.Callable.Builder,
-            stringTable: StringTable
-    ) {
-        for (annotation in callable.getAnnotations()) {
-            proto.addExtension(BuiltInsProtoBuf.callableAnnotation, AnnotationSerializer.serializeAnnotation(annotation, stringTable))
-        }
-        val compileTimeConstant = (callable as? PropertyDescriptor)?.getCompileTimeInitializer()
-        if (compileTimeConstant != null && compileTimeConstant !is NullValue) {
-            val type = compileTimeConstant.getType(KotlinBuiltIns.getInstance())
-            proto.setExtension(BuiltInsProtoBuf.compileTimeValue, AnnotationSerializer.valueProto(compileTimeConstant, type, stringTable).build())
-        }
-    }
-
-    override fun serializeValueParameter(
-            descriptor: ValueParameterDescriptor,
-            proto: ProtoBuf.Callable.ValueParameter.Builder,
-            stringTable: StringTable
-    ) {
-        for (annotation in descriptor.getAnnotations()) {
-            proto.addExtension(BuiltInsProtoBuf.parameterAnnotation, AnnotationSerializer.serializeAnnotation(annotation, stringTable))
-        }
-    }
-}
+import org.jetbrains.kotlin.utils.serializer.SerializerExtensionImpl
 
 public class BuiltInsSerializer(private val dependOnOldBuiltIns: Boolean) {
     private var totalSize = 0
@@ -162,7 +114,7 @@ public class BuiltInsSerializer(private val dependOnOldBuiltIns: Boolean) {
         // TODO: perform some kind of validation? At the moment not possible because DescriptorValidator is in compiler-tests
         // DescriptorValidator.validate(packageView)
 
-        val serializer = DescriptorSerializer.createTopLevel(BuiltInsSerializerExtension)
+        val serializer = DescriptorSerializer.createTopLevel(SerializerExtensionImpl)
 
         val classifierDescriptors = DescriptorSerializer.sort(packageView.getMemberScope().getDescriptors(DescriptorKindFilter.CLASSIFIERS))
 
