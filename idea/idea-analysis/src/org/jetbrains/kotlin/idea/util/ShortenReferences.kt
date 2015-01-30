@@ -106,7 +106,7 @@ public object ShortenReferences {
             elements: List<JetElement>,
             elementFilter: (PsiElement) -> FilterResult
     ) {
-        val elementsToUse = dropNestedElements(elements)
+        val elementsToUse = ArrayList(dropNestedElements(elements))
 
         val importInserter = ImportInserter(file)
 
@@ -121,6 +121,9 @@ public object ShortenReferences {
 
             visitor1.shortenElements()
             visitor2.shortenElements()
+
+            elementsToUse.removeAll(visitor1.getElementsToShorten())
+            elementsToUse.removeAll(visitor2.getElementsToShorten())
 
             if (descriptorsToImport1.isEmpty() && descriptorsToImport2.isEmpty()) break
 
@@ -141,7 +144,7 @@ public object ShortenReferences {
         }
     }
 
-    private fun dropNestedElements(elements: List<JetElement>): Iterable<JetElement> {
+    private fun dropNestedElements(elements: List<JetElement>): Collection<JetElement> {
         if (elements.size() <= 1) return elements
         val elementSet = elements.toSet()
         val newElements = ArrayList<JetElement>(elementSet.size())
@@ -200,6 +203,7 @@ public object ShortenReferences {
         }
 
         public fun getDescriptorsToImport(): Set<DeclarationDescriptor> = descriptorsToImport
+        public fun getElementsToShorten(): List<T> = elementsToShorten
     }
 
     private class ShortenTypesVisitor(
