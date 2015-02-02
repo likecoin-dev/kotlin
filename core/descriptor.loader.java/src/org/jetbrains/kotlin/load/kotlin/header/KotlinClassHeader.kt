@@ -28,11 +28,13 @@ public class KotlinClassHeader(
     public val isCompatibleAbiVersion: Boolean get() = AbiVersionUtil.isAbiVersionCompatible(version);
 
     {
-        assert(!isCompatibleAbiVersion || (annotationData == null) == (kind != Kind.CLASS && kind != Kind.PACKAGE_FACADE)) {
-            "Annotation data should be not null only for CLASS and PACKAGE_FACADE (kind=" + kind + ")"
-        }
-        assert(!isCompatibleAbiVersion || (syntheticClassKind == null) == (kind != Kind.SYNTHETIC_CLASS)) {
-            "Synthetic class kind should be present for SYNTHETIC_CLASS (kind=" + kind + ")"
+        if (isCompatibleAbiVersion) {
+            assert(annotationData != null || kind == Kind.SYNTHETIC_CLASS) {
+                "Annotation data can be null only for SYNTHETIC_CLASS (kind=$kind, syntheticClassKind=$syntheticClassKind)"
+            }
+            assert((syntheticClassKind == null) == (kind != Kind.SYNTHETIC_CLASS)) {
+                "Synthetic class kind should be present for SYNTHETIC_CLASS (kind=$kind, syntheticClassKind=$syntheticClassKind)"
+            }
         }
     }
 
@@ -41,6 +43,8 @@ public class KotlinClassHeader(
         PACKAGE_FACADE
         SYNTHETIC_CLASS
     }
+
+    override fun toString() = "$kind " + (if (syntheticClassKind != null) "$syntheticClassKind " else " ") + "version=$version"
 }
 
 public fun KotlinClassHeader.isCompatibleClassKind(): Boolean = isCompatibleAbiVersion && kind == KotlinClassHeader.Kind.CLASS

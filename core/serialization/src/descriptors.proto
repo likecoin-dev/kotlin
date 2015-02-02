@@ -301,5 +301,6 @@ enum Visibility {
   PROTECTED = 0x02;
   PUBLIC = 0x03;
   PRIVATE_TO_THIS = 0x04;
-  EXTRA = 0x05; // there's an extra field for the actual visibility
+  LOCAL = 0x05;
+  EXTRA = 0x07; // there's an extra field for the actual visibility
 }

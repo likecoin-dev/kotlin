@@ -25,25 +25,25 @@ public class ClassDeserializer(private val components: DeserializationComponents
             components.storageManager.createMemoizedFunctionWithNullableValues { key -> createClass(key) }
 
     // Additional ClassData parameter is needed to avoid calling ClassDataFinder#findClassData() if it is already computed at call site
-    public fun deserializeClass(classId: ClassId, classData: ClassData? = null): DeserializedClassDescriptor? =
-            classes(ClassKey(classId, classData))
+    public fun deserializeClass(classId: ClassId, local: Boolean = false, classData: ClassData? = null): DeserializedClassDescriptor? =
+            classes(ClassKey(classId, local, classData))
 
     private fun createClass(key: ClassKey): DeserializedClassDescriptor? {
         val classId = key.classId
-        val classData = key.classData ?: components.classDataFinder.findClassData(classId) ?: return null
+        val classData = key.classData ?: components.classDataFinder.findClassData(classId, key.local) ?: return null
         val outerContext = if (classId.isTopLevelClass()) {
             val fragments = components.packageFragmentProvider.getPackageFragments(classId.getPackageFqName())
             assert(fragments.size() == 1) { "There should be exactly one package: $fragments, class id is $classId" }
             components.createContext(fragments.single(), classData.getNameResolver())
         }
         else {
-            deserializeClass(classId.getOuterClassId())?.c ?: return null
+            deserializeClass(classId.getOuterClassId(), key.local)?.c ?: return null
         }
 
         return DeserializedClassDescriptor(outerContext, classData.getClassProto(), classData.getNameResolver())
     }
 
-    private inner class ClassKey(val classId: ClassId, val classData: ClassData?) {
+    private inner class ClassKey(val classId: ClassId, val local: Boolean, val classData: ClassData?) {
         override fun equals(other: Any?): Boolean = other is ClassKey && classId == other.classId
         override fun hashCode(): Int = classId.hashCode()
         override fun toString(): String = classId.toString()

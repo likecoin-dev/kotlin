@@ -84,7 +84,7 @@ public class BuiltinsPackageFragment(
             loadResource(path) ?: throw IllegalStateException("Resource not found in classpath: $path")
 
     private inner class BuiltInsClassDataFinder : ClassDataFinder {
-        override fun findClassData(classId: ClassId): ClassData? {
+        override fun findClassData(classId: ClassId, searchLocalClasses: Boolean): ClassData? {
             val metadataPath = BuiltInsSerializationUtil.getClassMetadataPath(classId) ?: return null
             val stream = loadResource(metadataPath) ?: return null
 

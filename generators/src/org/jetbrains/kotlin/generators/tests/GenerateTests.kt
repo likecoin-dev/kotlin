@@ -140,6 +140,7 @@ import org.jetbrains.kotlin.completion.handlers.AbstractBasicCompletionHandlerTe
 import org.jetbrains.kotlin.idea.decompiler.stubBuilder.AbstractClsStubBuilderTest
 import org.jetbrains.kotlin.codegen.AbstractLineNumberTest
 import org.jetbrains.kotlin.completion.handlers.AbstractKeywordCompletionHandlerTest
+import org.jetbrains.kotlin.serialization.AbstractLocalClassProtoTest
 
 fun main(args: Array<String>) {
     System.setProperty("java.awt.headless", "true")
@@ -306,6 +307,10 @@ fun main(args: Array<String>) {
         testClass(javaClass<AbstractLineNumberTest>()) {
             model("lineNumber", recursive = false)
             model("lineNumber/custom", testMethod = "doTestCustom")
+        }
+
+        testClass(javaClass<AbstractLocalClassProtoTest>()) {
+            model("serialization/local")
         }
     }
 

@@ -37,6 +37,7 @@ import java.util.Arrays
 import org.jetbrains.kotlin.jps.incremental.LocalFileKotlinClass
 import org.jetbrains.kotlin.load.kotlin.header.isCompatibleClassKind
 import org.jetbrains.kotlin.load.kotlin.header.isCompatiblePackageFacadeKind
+import org.jetbrains.kotlin.load.kotlin.header.KotlinClassHeader
 
 // Set this to true if you want to dump all bytecode (test will fail in this case)
 val DUMP_ALL = System.getProperty("comparison.dump.all") == "true"
@@ -133,16 +134,15 @@ fun classFileToString(classFile: File): String {
 
     val classHeader = LocalFileKotlinClass.create(classFile)?.getClassHeader()
 
-    val annotationDataEncoded = classHeader?.annotationData
-    if (annotationDataEncoded != null) {
-        ByteArrayInputStream(BitEncoding.decodeBytes(annotationDataEncoded)).use {
+    if (classHeader != null && classHeader.annotationData != null && classHeader.kind != KotlinClassHeader.Kind.SYNTHETIC_CLASS) {
+        ByteArrayInputStream(BitEncoding.decodeBytes(classHeader.annotationData)).use {
             input ->
 
             out.write("\n------ simpleNames proto -----\n${DebugProtoBuf.StringTable.parseDelimitedFrom(input)}")
             out.write("\n------ qualifiedNames proto -----\n${DebugProtoBuf.QualifiedNameTable.parseDelimitedFrom(input)}")
 
             when {
-                classHeader!!.isCompatiblePackageFacadeKind() ->
+                classHeader.isCompatiblePackageFacadeKind() ->
                     out.write("\n------ package proto -----\n${DebugProtoBuf.Package.parseFrom(input, getExtensionRegistry())}")
 
                 classHeader.isCompatibleClassKind() ->

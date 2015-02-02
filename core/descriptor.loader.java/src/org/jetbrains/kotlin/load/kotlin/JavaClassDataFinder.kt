@@ -26,10 +26,11 @@ public class JavaClassDataFinder(
         private val kotlinClassFinder: KotlinClassFinder,
         private val deserializedDescriptorResolver: DeserializedDescriptorResolver
 ) : ClassDataFinder {
-    override fun findClassData(classId: ClassId): ClassData? {
+    override fun findClassData(classId: ClassId, searchLocalClasses: Boolean): ClassData? {
         val javaClassId = DeserializedResolverUtils.kotlinClassIdToJavaClassId(classId)
         val kotlinJvmBinaryClass = kotlinClassFinder.findKotlinClass(javaClassId) ?: return null
-        val data = deserializedDescriptorResolver.readData(kotlinJvmBinaryClass, KotlinClassHeader.Kind.CLASS) ?: return null
+        val kind = if (searchLocalClasses) KotlinClassHeader.Kind.SYNTHETIC_CLASS else KotlinClassHeader.Kind.CLASS
+        val data = deserializedDescriptorResolver.readData(kotlinJvmBinaryClass, kind) ?: return null
         return JvmProtoBufUtil.readClassDataFrom(data)
     }
 }

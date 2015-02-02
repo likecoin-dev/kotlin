@@ -25,6 +25,8 @@ public @interface KotlinSyntheticClass {
 
     Kind kind();
 
+    String[] data();
+
     // Inner classes of local classes have kind LOCAL_CLASS
     // Local trait-impl also has kind LOCAL_CLASS
     public static enum Kind {

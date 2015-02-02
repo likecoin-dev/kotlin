@@ -43,6 +43,7 @@ fun visibility(visibility: ProtoBuf.Visibility) = when (visibility) {
     ProtoBuf.Visibility.PRIVATE_TO_THIS -> Visibilities.PRIVATE_TO_THIS
     ProtoBuf.Visibility.PROTECTED -> Visibilities.PROTECTED
     ProtoBuf.Visibility.PUBLIC -> Visibilities.PUBLIC
+    ProtoBuf.Visibility.LOCAL -> Visibilities.LOCAL
     ProtoBuf.Visibility.EXTRA -> throw UnsupportedOperationException("Extra visibilities are not supported yet")
 }
 

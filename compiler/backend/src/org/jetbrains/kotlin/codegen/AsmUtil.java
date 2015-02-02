@@ -36,6 +36,7 @@ import org.jetbrains.kotlin.descriptors.*;
 import org.jetbrains.kotlin.lexer.JetTokens;
 import org.jetbrains.kotlin.load.java.JavaVisibilities;
 import org.jetbrains.kotlin.load.java.JvmAbi;
+import org.jetbrains.kotlin.load.java.JvmAnnotationNames;
 import org.jetbrains.kotlin.load.java.descriptors.JavaCallableMemberDescriptor;
 import org.jetbrains.kotlin.load.kotlin.PackagePartClassUtils;
 import org.jetbrains.kotlin.name.FqName;
@@ -49,6 +50,7 @@ import org.jetbrains.kotlin.resolve.jvm.JvmClassName;
 import org.jetbrains.kotlin.resolve.jvm.JvmPackage;
 import org.jetbrains.kotlin.resolve.jvm.JvmPrimitiveType;
 import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin;
+import org.jetbrains.kotlin.serialization.jvm.BitEncoding;
 import org.jetbrains.kotlin.types.Approximation;
 import org.jetbrains.kotlin.types.JetType;
 import org.jetbrains.kotlin.types.TypesPackage;
@@ -829,11 +831,28 @@ public class AsmUtil {
     }
 
     public static void writeKotlinSyntheticClassAnnotation(@NotNull ClassBuilder v, @NotNull KotlinSyntheticClass.Kind kind) {
+        writeKotlinSyntheticClassAnnotation(v, kind, null);
+    }
+
+    public static void writeKotlinSyntheticClassAnnotation(
+            @NotNull ClassBuilder v,
+            @NotNull KotlinSyntheticClass.Kind kind,
+            @Nullable byte[] data
+    ) {
         AnnotationVisitor av = v.newAnnotation(Type.getObjectType(KotlinSyntheticClass.CLASS_NAME.getInternalName()).getDescriptor(), true);
         av.visit(ABI_VERSION_FIELD_NAME, JvmAbi.VERSION);
-        av.visitEnum(KotlinSyntheticClass.KIND_FIELD_NAME.asString(),
-                     Type.getObjectType(KotlinSyntheticClass.KIND_INTERNAL_NAME).getDescriptor(),
-                     kind.toString());
+        av.visitEnum(
+                KotlinSyntheticClass.KIND_FIELD_NAME.asString(),
+                Type.getObjectType(KotlinSyntheticClass.KIND_INTERNAL_NAME).getDescriptor(),
+                kind.toString()
+        );
+        AnnotationVisitor array = av.visitArray(JvmAnnotationNames.DATA_FIELD_NAME);
+        if (data != null) {
+            for (String string : BitEncoding.encodeBytes(data)) {
+                array.visit(null, string);
+            }
+        }
+        array.visitEnd();
         av.visitEnd();
     }
 

@@ -108,46 +108,40 @@ public class IncrementalCacheImpl(targetDataRoot: File): StorageOwner, Increment
         val className = JvmClassName.byClassId(kotlinClass.getClassId())
         val header = kotlinClass.getClassHeader()
 
-        val annotationDataEncoded = header.annotationData
-        if (annotationDataEncoded != null) {
-            val data = BitEncoding.decodeBytes(annotationDataEncoded)
-            when {
-                header.isCompatiblePackageFacadeKind() -> {
-                    return if (protoMap.put(className, data)) RECOMPILE_OTHERS_IN_CHUNK else DO_NOTHING
-                }
-                header.isCompatibleClassKind() -> {
-                    val inlinesChanged = inlineFunctionsMap.process(className, fileBytes)
-                    val protoChanged = protoMap.put(className, data)
-                    val constantsChanged = constantsMap.process(className, fileBytes)
+        when {
+            header.isCompatiblePackageFacadeKind() -> {
+                val protoChanged = protoMap.put(className, BitEncoding.decodeBytes(header.annotationData))
+                return if (protoChanged) RECOMPILE_OTHERS_IN_CHUNK else DO_NOTHING
+            }
+            header.isCompatibleClassKind() -> {
+                val inlinesChanged = inlineFunctionsMap.process(className, fileBytes)
+                val protoChanged = protoMap.put(className, BitEncoding.decodeBytes(header.annotationData))
+                val constantsChanged = constantsMap.process(className, fileBytes)
 
-                    return when {
-                        inlinesChanged -> RECOMPILE_ALL_CHUNK_AND_DEPENDANTS
-                        constantsChanged -> RECOMPILE_OTHERS_WITH_DEPENDANTS
-                        protoChanged -> RECOMPILE_OTHERS_IN_CHUNK
-                        else -> DO_NOTHING
-                    }
-                }
-                else -> {
-                    throw IllegalStateException("Unexpected kind with annotationData: ${header.kind}, isCompatible: ${header.isCompatibleAbiVersion}")
+                return when {
+                    inlinesChanged -> RECOMPILE_ALL_CHUNK_AND_DEPENDANTS
+                    constantsChanged -> RECOMPILE_OTHERS_WITH_DEPENDANTS
+                    protoChanged -> RECOMPILE_OTHERS_IN_CHUNK
+                    else -> DO_NOTHING
                 }
             }
-        }
+            header.syntheticClassKind == JvmAnnotationNames.KotlinSyntheticClass.Kind.PACKAGE_PART -> {
+                assert(sourceFiles.size() == 1) { "Package part from several source files: $sourceFiles" }
 
-        if (header.syntheticClassKind == JvmAnnotationNames.KotlinSyntheticClass.Kind.PACKAGE_PART) {
-            assert(sourceFiles.size == 1) { "Package part from several source files: $sourceFiles" }
+                packagePartMap.putPackagePartSourceData(sourceFiles.first(), className)
+                val inlinesChanged = inlineFunctionsMap.process(className, fileBytes)
+                val constantsChanged = constantsMap.process(className, fileBytes)
 
-            packagePartMap.putPackagePartSourceData(sourceFiles.first(), className)
-            val inlinesChanged = inlineFunctionsMap.process(className, fileBytes)
-            val constantsChanged = constantsMap.process(className, fileBytes)
-
-            return when {
-                inlinesChanged -> RECOMPILE_ALL_CHUNK_AND_DEPENDANTS
-                constantsChanged -> RECOMPILE_OTHERS_WITH_DEPENDANTS
-                else -> DO_NOTHING
+                return when {
+                    inlinesChanged -> RECOMPILE_ALL_CHUNK_AND_DEPENDANTS
+                    constantsChanged -> RECOMPILE_OTHERS_WITH_DEPENDANTS
+                    else -> DO_NOTHING
+                }
+            }
+            else -> {
+                return DO_NOTHING
             }
         }
-
-        return DO_NOTHING
     }
 
     public fun clearCacheForRemovedFiles(removedSourceFiles: Collection<File>, outDirectory: File, compilationSuccessful: Boolean) {

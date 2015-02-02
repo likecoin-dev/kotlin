@@ -227,7 +227,7 @@ private class ClassClsStubBuilder(
     }
 
     private fun createNestedClassStub(classBody: StubElement<out PsiElement>, nestedClassId: ClassId) {
-        val classData = c.components.classDataFinder.findClassData(nestedClassId)!!
+        val classData = c.components.classDataFinder.findClassData(nestedClassId, false)!!
         createClassStub(classBody, classData.getClassProto(), nestedClassId, c.child(classData.getNameResolver()))
     }
 }
