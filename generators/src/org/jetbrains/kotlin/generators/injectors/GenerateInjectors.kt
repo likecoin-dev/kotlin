@@ -158,6 +158,7 @@ private fun generatorForJavaDescriptorResolver() =
                         init = GivenExpression(javaClass<TopDownAnalyzerFacadeForJVM>().getName() + ".createJavaModule(\"<fake-jdr-module>\")"))
             publicField<JavaDescriptorResolver>()
             publicField<JavaClassFinderImpl>()
+            publicField<DeserializationComponentsForJava>()
 
             field<GlobalSearchScope>(
                   init = GivenExpression(javaClass<GlobalSearchScope>().getName() + ".allScope(project)"))

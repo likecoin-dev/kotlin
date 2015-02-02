@@ -23,5 +23,5 @@ import org.jetbrains.kotlin.serialization.ClassData;
 
 public interface ClassDataFinder {
     @Nullable
-    ClassData findClassData(@NotNull ClassId classId);
+    ClassData findClassData(@NotNull ClassId classId, boolean searchLocalClasses);
 }

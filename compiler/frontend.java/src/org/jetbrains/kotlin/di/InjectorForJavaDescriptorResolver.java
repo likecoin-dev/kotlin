@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.storage.LockBasedStorageManager;
 import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl;
 import org.jetbrains.kotlin.resolve.jvm.JavaDescriptorResolver;
 import org.jetbrains.kotlin.load.java.JavaClassFinderImpl;
+import org.jetbrains.kotlin.load.kotlin.DeserializationComponentsForJava;
 import com.intellij.psi.search.GlobalSearchScope;
 import org.jetbrains.kotlin.load.java.components.TraceBasedExternalSignatureResolver;
 import org.jetbrains.kotlin.load.java.components.TraceBasedJavaResolverCache;
@@ -38,7 +39,6 @@ import org.jetbrains.kotlin.load.kotlin.VirtualFileFinder;
 import org.jetbrains.kotlin.load.java.lazy.LazyJavaPackageFragmentProvider;
 import org.jetbrains.kotlin.load.java.lazy.GlobalJavaResolverContext;
 import org.jetbrains.kotlin.load.kotlin.DeserializedDescriptorResolver;
-import org.jetbrains.kotlin.load.kotlin.DeserializationComponentsForJava;
 import org.jetbrains.kotlin.load.kotlin.JavaClassDataFinder;
 import org.jetbrains.kotlin.load.kotlin.BinaryClassAnnotationAndConstantLoaderImpl;
 import org.jetbrains.annotations.NotNull;
@@ -55,6 +55,7 @@ public class InjectorForJavaDescriptorResolver {
     private final ModuleDescriptorImpl module;
     private final JavaDescriptorResolver javaDescriptorResolver;
     private final JavaClassFinderImpl javaClassFinder;
+    private final DeserializationComponentsForJava deserializationComponentsForJava;
     private final GlobalSearchScope globalSearchScope;
     private final TraceBasedExternalSignatureResolver traceBasedExternalSignatureResolver;
     private final TraceBasedJavaResolverCache traceBasedJavaResolverCache;
@@ -70,7 +71,6 @@ public class InjectorForJavaDescriptorResolver {
     private final LazyJavaPackageFragmentProvider lazyJavaPackageFragmentProvider;
     private final GlobalJavaResolverContext globalJavaResolverContext;
     private final DeserializedDescriptorResolver deserializedDescriptorResolver;
-    private final DeserializationComponentsForJava deserializationComponentsForJava;
     private final JavaClassDataFinder javaClassDataFinder;
     private final BinaryClassAnnotationAndConstantLoaderImpl binaryClassAnnotationAndConstantLoader;
 
@@ -98,11 +98,11 @@ public class InjectorForJavaDescriptorResolver {
         this.globalJavaResolverContext = new GlobalJavaResolverContext(lockBasedStorageManager, getJavaClassFinder(), virtualFileFinder, deserializedDescriptorResolver, psiBasedExternalAnnotationResolver, traceBasedExternalSignatureResolver, traceBasedErrorReporter, psiBasedMethodSignatureChecker, traceBasedJavaResolverCache, javaPropertyInitializerEvaluator, samConversionResolver, javaSourceElementFactory, singleModuleClassResolver);
         this.lazyJavaPackageFragmentProvider = new LazyJavaPackageFragmentProvider(globalJavaResolverContext, getModule());
         this.javaDescriptorResolver = new JavaDescriptorResolver(lazyJavaPackageFragmentProvider, getModule());
-        this.globalSearchScope = com.intellij.psi.search.GlobalSearchScope.allScope(project);
-        this.javaDescriptorResolverPostConstruct = new JavaDescriptorResolverPostConstruct();
         this.javaClassDataFinder = new JavaClassDataFinder(virtualFileFinder, deserializedDescriptorResolver);
         this.binaryClassAnnotationAndConstantLoader = new BinaryClassAnnotationAndConstantLoaderImpl(getModule(), lockBasedStorageManager, virtualFileFinder, traceBasedErrorReporter);
         this.deserializationComponentsForJava = new DeserializationComponentsForJava(lockBasedStorageManager, getModule(), javaClassDataFinder, binaryClassAnnotationAndConstantLoader, lazyJavaPackageFragmentProvider);
+        this.globalSearchScope = com.intellij.psi.search.GlobalSearchScope.allScope(project);
+        this.javaDescriptorResolverPostConstruct = new JavaDescriptorResolverPostConstruct();
 
         this.javaClassFinder.setComponentPostConstruct(javaDescriptorResolverPostConstruct);
         this.javaClassFinder.setProject(project);
@@ -151,6 +151,10 @@ public class InjectorForJavaDescriptorResolver {
 
     public JavaClassFinderImpl getJavaClassFinder() {
         return this.javaClassFinder;
+    }
+
+    public DeserializationComponentsForJava getDeserializationComponentsForJava() {
+        return this.deserializationComponentsForJava;
     }
 
 }

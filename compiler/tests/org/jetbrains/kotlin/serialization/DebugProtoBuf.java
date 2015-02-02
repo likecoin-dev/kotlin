@@ -137,13 +137,17 @@ public final class DebugProtoBuf {
      */
     PRIVATE_TO_THIS(4, 4),
     /**
-     * <code>EXTRA = 5;</code>
+     * <code>LOCAL = 5;</code>
+     */
+    LOCAL(5, 5),
+    /**
+     * <code>EXTRA = 7;</code>
      *
      * <pre>
      * there's an extra field for the actual visibility
      * </pre>
      */
-    EXTRA(5, 5),
+    EXTRA(6, 7),
     ;
 
     /**
@@ -171,13 +175,17 @@ public final class DebugProtoBuf {
      */
     public static final int PRIVATE_TO_THIS_VALUE = 4;
     /**
-     * <code>EXTRA = 5;</code>
+     * <code>LOCAL = 5;</code>
+     */
+    public static final int LOCAL_VALUE = 5;
+    /**
+     * <code>EXTRA = 7;</code>
      *
      * <pre>
      * there's an extra field for the actual visibility
      * </pre>
      */
-    public static final int EXTRA_VALUE = 5;
+    public static final int EXTRA_VALUE = 7;
 
 
     public final int getNumber() { return value; }
@@ -189,7 +197,8 @@ public final class DebugProtoBuf {
         case 2: return PROTECTED;
         case 3: return PUBLIC;
         case 4: return PRIVATE_TO_THIS;
-        case 5: return EXTRA;
+        case 5: return LOCAL;
+        case 7: return EXTRA;
         default: return null;
       }
     }
@@ -17792,10 +17801,10 @@ public final class DebugProtoBuf {
       "THESIZED\020\003\":\n\014CallableKind\022\007\n\003FUN\020\000\022\007\n\003V",
       "AL\020\001\022\007\n\003VAR\020\002\022\017\n\013CONSTRUCTOR\020\003*\005\010d\020\310\001*-\n" +
       "\010Modality\022\t\n\005FINAL\020\000\022\010\n\004OPEN\020\001\022\014\n\010ABSTRA" +
-      "CT\020\002*b\n\nVisibility\022\014\n\010INTERNAL\020\000\022\013\n\007PRIV" +
+      "CT\020\002*m\n\nVisibility\022\014\n\010INTERNAL\020\000\022\013\n\007PRIV" +
       "ATE\020\001\022\r\n\tPROTECTED\020\002\022\n\n\006PUBLIC\020\003\022\023\n\017PRIV" +
-      "ATE_TO_THIS\020\004\022\t\n\005EXTRA\020\005B\022B\rDebugProtoBu" +
-      "f\210\001\000"
+      "ATE_TO_THIS\020\004\022\t\n\005LOCAL\020\005\022\t\n\005EXTRA\020\007B\022B\rD" +
+      "ebugProtoBuf\210\001\000"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

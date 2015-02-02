@@ -55,7 +55,7 @@ public final class DeserializedDescriptorResolver {
         String[] data = readData(kotlinClass, CLASS);
         if (data != null) {
             return components.getClassDeserializer().deserializeClass(
-                    kotlinClass.getClassId(), JvmProtoBufUtil.readClassDataFrom(data)
+                    kotlinClass.getClassId(), /* local = */ false, JvmProtoBufUtil.readClassDataFrom(data)
             );
         }
         return null;

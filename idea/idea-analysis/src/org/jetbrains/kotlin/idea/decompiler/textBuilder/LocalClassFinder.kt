@@ -54,7 +54,7 @@ class LocalClassDataFinder(
         val localClassFinder: LocalClassFinder,
         val log: Logger
 ) : ClassDataFinder {
-    override fun findClassData(classId: ClassId): ClassData? {
+    override fun findClassData(classId: ClassId, searchLocalClasses: Boolean): ClassData? {
         val binaryClass = localClassFinder.findKotlinClass(classId) ?: return null
         val data = binaryClass.getClassHeader().annotationData
         if (data == null) {

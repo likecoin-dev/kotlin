@@ -217,31 +217,31 @@ public class ImplementationBodyCodegen extends ClassBodyCodegen {
 
     @Override
     protected void generateKotlinAnnotation() {
+        if (state.getClassBuilderMode() != ClassBuilderMode.FULL) return;
+
+        DescriptorSerializer serializer =
+                DescriptorSerializer.create(descriptor, new JvmSerializerExtension(v.getSerializationBindings(), typeMapper));
+
+        ProtoBuf.Class classProto = serializer.classProto(descriptor).build();
+
+        byte[] data = new ClassData(createNameResolver(serializer.getStringTable()), classProto).toBytes();
+
         if (isAnonymousObject(descriptor)) {
-            writeKotlinSyntheticClassAnnotation(v, KotlinSyntheticClass.Kind.ANONYMOUS_OBJECT);
+            writeKotlinSyntheticClassAnnotation(v, KotlinSyntheticClass.Kind.ANONYMOUS_OBJECT, data);
             return;
         }
 
         if (!isTopLevelOrInnerClass(descriptor)) {
             // LOCAL_CLASS is also written to inner classes of local classes
-            writeKotlinSyntheticClassAnnotation(v, KotlinSyntheticClass.Kind.LOCAL_CLASS);
+            writeKotlinSyntheticClassAnnotation(v, KotlinSyntheticClass.Kind.LOCAL_CLASS, data);
             return;
         }
-
-        if (state.getClassBuilderMode() != ClassBuilderMode.FULL) return;
-
-        DescriptorSerializer serializer =
-                DescriptorSerializer.create(descriptor, new JvmSerializerExtension(v.getSerializationBindings()));
-
-        ProtoBuf.Class classProto = serializer.classProto(descriptor).build();
-
-        ClassData data = new ClassData(createNameResolver(serializer.getStringTable()), classProto);
 
         AnnotationVisitor av = v.getVisitor().visitAnnotation(asmDescByFqNameWithoutInnerClasses(JvmAnnotationNames.KOTLIN_CLASS), true);
         //noinspection ConstantConditions
         av.visit(JvmAnnotationNames.ABI_VERSION_FIELD_NAME, JvmAbi.VERSION);
         AnnotationVisitor array = av.visitArray(JvmAnnotationNames.DATA_FIELD_NAME);
-        for (String string : BitEncoding.encodeBytes(data.toBytes())) {
+        for (String string : BitEncoding.encodeBytes(data)) {
             array.visit(null, string);
         }
         array.visitEnd();

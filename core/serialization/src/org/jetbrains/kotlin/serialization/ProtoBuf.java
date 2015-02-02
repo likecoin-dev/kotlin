@@ -111,13 +111,17 @@ public final class ProtoBuf {
      */
     PRIVATE_TO_THIS(4, 4),
     /**
-     * <code>EXTRA = 5;</code>
+     * <code>LOCAL = 5;</code>
+     */
+    LOCAL(5, 5),
+    /**
+     * <code>EXTRA = 7;</code>
      *
      * <pre>
      * there's an extra field for the actual visibility
      * </pre>
      */
-    EXTRA(5, 5),
+    EXTRA(6, 7),
     ;
 
     /**
@@ -145,13 +149,17 @@ public final class ProtoBuf {
      */
     public static final int PRIVATE_TO_THIS_VALUE = 4;
     /**
-     * <code>EXTRA = 5;</code>
+     * <code>LOCAL = 5;</code>
+     */
+    public static final int LOCAL_VALUE = 5;
+    /**
+     * <code>EXTRA = 7;</code>
      *
      * <pre>
      * there's an extra field for the actual visibility
      * </pre>
      */
-    public static final int EXTRA_VALUE = 5;
+    public static final int EXTRA_VALUE = 7;
 
 
     public final int getNumber() { return value; }
@@ -163,7 +171,8 @@ public final class ProtoBuf {
         case 2: return PROTECTED;
         case 3: return PUBLIC;
         case 4: return PRIVATE_TO_THIS;
-        case 5: return EXTRA;
+        case 5: return LOCAL;
+        case 7: return EXTRA;
         default: return null;
       }
     }

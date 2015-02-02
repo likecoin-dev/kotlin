@@ -19,11 +19,14 @@ package org.jetbrains.kotlin.load.kotlin.header;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.load.java.AbiVersionUtil;
-import org.jetbrains.kotlin.resolve.jvm.JvmClassName;
 import org.jetbrains.kotlin.name.ClassId;
 import org.jetbrains.kotlin.name.Name;
+import org.jetbrains.kotlin.resolve.jvm.JvmClassName;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.jetbrains.kotlin.load.java.AbiVersionUtil.isAbiVersionCompatible;
 import static org.jetbrains.kotlin.load.java.JvmAnnotationNames.*;
@@ -46,8 +49,7 @@ public class ReadKotlinClassHeaderAnnotationVisitor implements AnnotationVisitor
     @SuppressWarnings("deprecation")
     private static void initOldAnnotations() {
         OLD_DEPRECATED_ANNOTATIONS_KINDS.put(JvmClassName.byFqNameWithoutInnerClasses(OLD_JET_CLASS_ANNOTATION), CLASS);
-        OLD_DEPRECATED_ANNOTATIONS_KINDS.put(JvmClassName.byFqNameWithoutInnerClasses(OLD_JET_PACKAGE_CLASS_ANNOTATION),
-                                             KotlinClassHeader.Kind.PACKAGE_FACADE);
+        OLD_DEPRECATED_ANNOTATIONS_KINDS.put(JvmClassName.byFqNameWithoutInnerClasses(OLD_JET_PACKAGE_CLASS_ANNOTATION), PACKAGE_FACADE);
         OLD_DEPRECATED_ANNOTATIONS_KINDS.put(JvmClassName.byFqNameWithoutInnerClasses(OLD_KOTLIN_CLASS), CLASS);
         OLD_DEPRECATED_ANNOTATIONS_KINDS.put(JvmClassName.byFqNameWithoutInnerClasses(OLD_KOTLIN_PACKAGE), PACKAGE_FACADE);
         OLD_DEPRECATED_ANNOTATIONS_KINDS.put(JvmClassName.byFqNameWithoutInnerClasses(OLD_KOTLIN_PACKAGE_FRAGMENT), SYNTHETIC_CLASS);
@@ -93,11 +95,11 @@ public class ReadKotlinClassHeaderAnnotationVisitor implements AnnotationVisitor
 
             switch (newKind) {
                 case CLASS:
-                    return kotlinClassOrPackageVisitor(annotation);
+                    return new HeaderAnnotationArgumentVisitor(annotation);
                 case PACKAGE_FACADE:
-                    return kotlinClassOrPackageVisitor(annotation);
+                    return new HeaderAnnotationArgumentVisitor(annotation);
                 case SYNTHETIC_CLASS:
-                    return syntheticClassAnnotationVisitor();
+                    return new SyntheticClassAnnotationArgumentVisitor();
                 default:
                     throw new IllegalStateException("Unknown kind: " + newKind);
             }
@@ -115,112 +117,97 @@ public class ReadKotlinClassHeaderAnnotationVisitor implements AnnotationVisitor
     public void visitEnd() {
     }
 
-    @NotNull
-    private AnnotationArgumentVisitor kotlinClassOrPackageVisitor(@NotNull final JvmClassName annotationClassName) {
-        return new AnnotationArgumentVisitor() {
-            @Override
-            public void visit(@Nullable Name name, @Nullable Object value) {
-                visitIntValueForSupportedAnnotation(name, value, annotationClassName);
-            }
+    private class HeaderAnnotationArgumentVisitor implements AnnotationArgumentVisitor {
+        protected final JvmClassName annotationClassName;
 
-            @Override
-            public void visitEnum(@NotNull Name name, @NotNull ClassId enumClassId, @NotNull Name enumEntryName) {
-                unexpectedArgument(name, annotationClassName);
-            }
-
-            @Override
-            @Nullable
-            public AnnotationArrayArgumentVisitor visitArray(@NotNull Name name) {
-                if (name.asString().equals(DATA_FIELD_NAME)) {
-                    return stringArrayVisitor();
-                }
-                else if (isAbiVersionCompatible(version)) {
-                    throw new IllegalStateException("Unexpected array argument " + name + " for annotation " + annotationClassName);
-                }
-
-                return null;
-            }
-
-            @NotNull
-            private AnnotationArrayArgumentVisitor stringArrayVisitor() {
-                final List<String> strings = new ArrayList<String>(1);
-                return new AnnotationArrayArgumentVisitor() {
-                    @Override
-                    public void visit(@Nullable Object value) {
-                        if (!(value instanceof String)) {
-                            throw new IllegalStateException("Unexpected argument value: " + value);
-                        }
-
-                        strings.add((String) value);
-                    }
-
-                    @Override
-                    public void visitEnum(@NotNull ClassId enumClassId, @NotNull Name enumEntryName) {
-                        unexpectedArgument(null, annotationClassName);
-                    }
-
-                    @Override
-                    public void visitEnd() {
-                        //noinspection SSBasedInspection
-                        annotationData = strings.toArray(new String[strings.size()]);
-                    }
-                };
-            }
-
-            @Override
-            public void visitEnd() {
-            }
-        };
-    }
-
-    @NotNull
-    private AnnotationArgumentVisitor syntheticClassAnnotationVisitor() {
-        return new AnnotationArgumentVisitor() {
-            @Override
-            public void visit(@Nullable Name name, @Nullable Object value) {
-                visitIntValueForSupportedAnnotation(name, value, KotlinSyntheticClass.CLASS_NAME);
-            }
-
-            @Override
-            public void visitEnum(@NotNull Name name, @NotNull ClassId enumClassId, @NotNull Name enumEntryName) {
-                if (enumClassId.equals(KotlinSyntheticClass.KIND_CLASS_ID) && name.equals(KotlinSyntheticClass.KIND_FIELD_NAME)) {
-                    // Don't call KotlinSyntheticClass.Kind.valueOf() here, because it will throw an exception if there's no such value,
-                    // but we don't want to fail if we're loading the header with an _incompatible_ ABI version
-                    syntheticClassKind = KotlinSyntheticClass.Kind.valueOfOrNull(enumEntryName.asString());
-                    if (syntheticClassKind != null) return;
-                }
-                if (isAbiVersionCompatible(version)) {
-                    throw new IllegalStateException("Unexpected enum entry for synthetic class annotation: " +
-                                                    name + "=" + enumClassId + "." + enumEntryName);
-                }
-            }
-
-            @Nullable
-            @Override
-            public AnnotationArrayArgumentVisitor visitArray(@NotNull Name name) {
-                return unexpectedArgument(name, KotlinSyntheticClass.CLASS_NAME);
-            }
-
-            @Override
-            public void visitEnd() {
-            }
-        };
-    }
-
-    private void visitIntValueForSupportedAnnotation(@Nullable Name name, @Nullable Object value, @NotNull JvmClassName className) {
-        if (name != null && name.asString().equals(ABI_VERSION_FIELD_NAME)) {
-            version = value == null ? AbiVersionUtil.INVALID_VERSION : (Integer) value;
+        public HeaderAnnotationArgumentVisitor(@NotNull JvmClassName annotationClassName) {
+            this.annotationClassName = annotationClassName;
         }
-        else {
-            unexpectedArgument(name, className);
+
+        @Override
+        public void visit(@Nullable Name name, @Nullable Object value) {
+            if (name != null && name.asString().equals(ABI_VERSION_FIELD_NAME)) {
+                version = value == null ? AbiVersionUtil.INVALID_VERSION : (Integer) value;
+            }
+            else {
+                unexpectedArgument(name);
+            }
+        }
+
+        @Override
+        public void visitEnum(@NotNull Name name, @NotNull ClassId enumClassId, @NotNull Name enumEntryName) {
+            unexpectedArgument(name);
+        }
+
+        @Override
+        @Nullable
+        public AnnotationArrayArgumentVisitor visitArray(@NotNull Name name) {
+            if (name.asString().equals(DATA_FIELD_NAME)) {
+                return stringArrayVisitor();
+            }
+            else if (isAbiVersionCompatible(version)) {
+                throw new IllegalStateException("Unexpected array argument " + name + " for annotation " + annotationClassName);
+            }
+
+            return null;
+        }
+
+        @NotNull
+        private AnnotationArrayArgumentVisitor stringArrayVisitor() {
+            final List<String> strings = new ArrayList<String>(1);
+            return new AnnotationArrayArgumentVisitor() {
+                @Override
+                public void visit(@Nullable Object value) {
+                    if (!(value instanceof String)) {
+                        throw new IllegalStateException("Unexpected argument value: " + value);
+                    }
+
+                    strings.add((String) value);
+                }
+
+                @Override
+                public void visitEnum(@NotNull ClassId enumClassId, @NotNull Name enumEntryName) {
+                    unexpectedArgument(null);
+                }
+
+                @Override
+                public void visitEnd() {
+                    //noinspection SSBasedInspection
+                    annotationData = strings.toArray(new String[strings.size()]);
+                }
+            };
+        }
+
+        @Nullable
+        private AnnotationArrayArgumentVisitor unexpectedArgument(@Nullable Name name) {
+            if (isAbiVersionCompatible(version)) {
+                throw new IllegalStateException("Unexpected argument " + name + " for annotation " + annotationClassName);
+            }
+            return null;
+        }
+
+        @Override
+        public void visitEnd() {
         }
     }
 
-    @Nullable
-    private AnnotationArrayArgumentVisitor unexpectedArgument(@Nullable Name name, @NotNull JvmClassName annotationClassName) {
-        if (isAbiVersionCompatible(version)) {
-            throw new IllegalStateException("Unexpected argument " + name + " for annotation " + annotationClassName);
+    private class SyntheticClassAnnotationArgumentVisitor extends HeaderAnnotationArgumentVisitor {
+        public SyntheticClassAnnotationArgumentVisitor() {
+            super(KotlinSyntheticClass.CLASS_NAME);
         }
-        return null;
+
+        @Override
+        public void visitEnum(@NotNull Name name, @NotNull ClassId enumClassId, @NotNull Name enumEntryName) {
+            if (enumClassId.equals(KotlinSyntheticClass.KIND_CLASS_ID) && name.equals(KotlinSyntheticClass.KIND_FIELD_NAME)) {
+                // Don't call KotlinSyntheticClass.Kind.valueOf() here, because it will throw an exception if there's no such value,
+                // but we don't want to fail if we're loading the header with an _incompatible_ ABI version
+                syntheticClassKind = KotlinSyntheticClass.Kind.valueOfOrNull(enumEntryName.asString());
+                if (syntheticClassKind != null) return;
+            }
+            if (isAbiVersionCompatible(version)) {
+                throw new IllegalStateException("Unexpected enum entry for synthetic class annotation: " +
+                                                name + "=" + enumClassId + "." + enumEntryName);
+            }
+        }
     }
 }
