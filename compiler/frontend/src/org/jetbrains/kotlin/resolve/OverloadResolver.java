@@ -64,6 +64,9 @@ public class OverloadResolver {
             @NotNull MultiMap<FqNameUnsafe, ConstructorDescriptor> inPackages
     ) {
         for (ClassDescriptorWithResolutionScopes klass : c.getDeclaredClasses().values()) {
+            if (klass.getName().isSpecial()) {
+                continue;
+            }
             if (klass.getKind().isSingleton()) {
                 // Constructors of singletons aren't callable from the code, so they shouldn't participate in overload name checking
                 continue;
