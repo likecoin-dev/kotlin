@@ -37,10 +37,13 @@ class KClassImpl<T>(val jClass: Class<T>, isKnownToBeKotlin: Boolean = false) : 
     // resulting in infinite recursion
     val descriptor by Delegates.lazySoft {(): ClassDescriptor ->
         val moduleData = jClass.getOrCreateModule()
-        val outerClass = jClass.getDeclaringClass() as Class<Any>?
+        val classId = jClass.classId
 
-        val found = moduleData.module.findClassAcrossModuleDependencies(jClass.classId)
+        val found = moduleData.module.findClassAcrossModuleDependencies(classId)
         if (found != null) return@lazySoft found
+
+        val local = moduleData.deserializationComponents.classDeserializer.deserializeClass(classId, local = true)
+        if (local != null) return@lazySoft local
 
         // TODO: do something if class is not found
         error("Class not found: $jClass")
