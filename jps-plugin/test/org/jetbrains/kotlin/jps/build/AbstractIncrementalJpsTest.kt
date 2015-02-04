@@ -34,11 +34,10 @@ import java.util.HashMap
 import org.jetbrains.kotlin.utils.keysToMap
 import org.jetbrains.jps.incremental.messages.BuildMessage
 import kotlin.test.assertFalse
-import java.util.regex.Pattern
 import kotlin.test.assertEquals
-import org.jetbrains.jps.model.java.JpsJavaDependencyExtension
 import org.jetbrains.jps.model.JpsModuleRootModificationUtil
 import com.intellij.openapi.util.io.FileUtilRt
+import org.jetbrains.kotlin.test.JetTestUtils
 
 public abstract class AbstractIncrementalJpsTest : JpsBuildTestCase() {
     class object {
@@ -286,20 +285,7 @@ public abstract class AbstractIncrementalJpsTest : JpsBuildTestCase() {
         override fun isEnabled(): Boolean = true
 
         override fun logLine(message: String?) {
-            fun String.replaceHashWithStar(): String {
-                val matcher = STRIP_PACKAGE_PART_HASH_PATTERN.matcher(this)
-                if (matcher.find()) {
-                    return matcher.replaceAll("\\$*")
-                }
-                return this
-            }
-
-            logBuf.append(message!!.trimLeading(rootPath + "/").replaceHashWithStar()).append('\n')
-        }
-
-        class object {
-            // We suspect sequences of eight consecutive hexadecimal digits to be a package part hash code
-            val STRIP_PACKAGE_PART_HASH_PATTERN = Pattern.compile("\\$([0-9a-f]{8})")
+            logBuf.append(JetTestUtils.replaceHashWithStar(message!!.trimLeading(rootPath + "/"))).append('\n')
         }
     }
 
