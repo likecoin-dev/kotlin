@@ -8598,6 +8598,12 @@ public class JetDiagnosticsTestGenerated extends AbstractJetDiagnosticsTest {
                     doTest(fileName);
                 }
 
+                @TestMetadata("elvis.kt")
+                public void testElvis() throws Exception {
+                    String fileName = JetTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/platformTypes/nullabilityWarnings/elvis.kt");
+                    doTest(fileName);
+                }
+
                 @TestMetadata("expectedType.kt")
                 public void testExpectedType() throws Exception {
                     String fileName = JetTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/platformTypes/nullabilityWarnings/expectedType.kt");
@@ -8625,6 +8631,12 @@ public class JetDiagnosticsTestGenerated extends AbstractJetDiagnosticsTest {
                 @TestMetadata("multiDeclaration.kt")
                 public void testMultiDeclaration() throws Exception {
                     String fileName = JetTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/platformTypes/nullabilityWarnings/multiDeclaration.kt");
+                    doTest(fileName);
+                }
+
+                @TestMetadata("notNullAssertion.kt")
+                public void testNotNullAssertion() throws Exception {
+                    String fileName = JetTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/platformTypes/nullabilityWarnings/notNullAssertion.kt");
                     doTest(fileName);
                 }
 

@@ -792,7 +792,13 @@ public class BasicExpressionTypingVisitor extends ExpressionTypingVisitor {
             DataFlowValue value = createDataFlowValue(baseExpression, baseType, context.trace.getBindingContext());
             dataFlowInfo = dataFlowInfo.disequate(value, DataFlowValue.NULL);
         }
-        return JetTypeInfo.create(TypeUtils.makeNotNullable(baseType), dataFlowInfo);
+        // The call to checkType() is only needed here to execute additionalTypeCheckers, hence the NO_EXPECTED_TYPE
+        return DataFlowUtils.checkType(
+                TypeUtils.makeNotNullable(baseType),
+                expression,
+                context.replaceExpectedType(NO_EXPECTED_TYPE),
+                dataFlowInfo
+        );
     }
 
     @Override
@@ -1083,7 +1089,7 @@ public class BasicExpressionTypingVisitor extends ExpressionTypingVisitor {
         if (!TypeUtils.isNullableType(rightType) && TypeUtils.isNullableType(type)) {
             type = TypeUtils.makeNotNullable(type);
         }
-        return JetTypeInfo.create(type, dataFlowInfo);
+        return DataFlowUtils.checkType(type, expression, context, dataFlowInfo);
     }
 
     @NotNull
