@@ -99,10 +99,6 @@ public class KotlinLightClassForPackage private(
         (getDelegate().getContainingFile() as ClsFileImpl).getStub()
     }
 
-    override fun getOrigin() = null
-
-    override fun getFqName() = packageClassFqName
-
     override fun getModifierList() = modifierList
 
     override fun hasModifierProperty(NonNls name: String) = modifierList.hasModifierProperty(name)
