@@ -35,6 +35,7 @@ message QualifiedNameTable {
     enum Kind {
       CLASS = 0;
       PACKAGE = 1;
+      // TODO: LOCAL? + to ClassId
     }
   }
 
@@ -246,7 +247,7 @@ message Callable {
      hasConstant
    */
   optional int32 flags = 1;
-  optional string extra_visibility = 2; // for things like java-specific visibilities
+  optional string extra_visibility = 2; // for things like java-specific visibilities // TODO: test override package-local && drop extra
 
   /*
      isNotDefault

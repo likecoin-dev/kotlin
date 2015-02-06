@@ -226,7 +226,7 @@ public class ImplementationBodyCodegen extends ClassBodyCodegen {
 
         byte[] data = new ClassData(createNameResolver(serializer.getStringTable()), classProto).toBytes();
 
-        if (isAnonymousObject(descriptor)) {
+        if (isAnonymousObject(descriptor)) { // TODO: kind in KotlinClass?
             writeKotlinSyntheticClassAnnotation(v, KotlinSyntheticClass.Kind.ANONYMOUS_OBJECT, data);
             return;
         }

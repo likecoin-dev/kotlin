@@ -19,6 +19,8 @@ package kotlin.jvm.internal;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+// TODO: write KotlinClass for local/anonymous instead
+
 @Retention(RetentionPolicy.RUNTIME)
 public @interface KotlinSyntheticClass {
     int abiVersion();

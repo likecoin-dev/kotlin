@@ -73,6 +73,7 @@ public class JvmSerializerExtension extends SerializerExtension {
     @Override
     @NotNull
     public String getLocalClassName(@NotNull ClassDescriptor descriptor) {
+        // TODO: up to outer class?
         return shortNameByAsmType(typeMapper.mapClass(descriptor));
     }
 

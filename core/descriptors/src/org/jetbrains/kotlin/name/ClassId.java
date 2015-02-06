@@ -26,6 +26,7 @@ public final class ClassId {
 
     private final FqName packageFqName;
     private final FqNameUnsafe relativeClassName;
+    // TODO: FqNameUnsafe for local part?
 
     public ClassId(@NotNull FqName packageFqName, @NotNull FqNameUnsafe relativeClassName) {
         this.packageFqName = packageFqName;
