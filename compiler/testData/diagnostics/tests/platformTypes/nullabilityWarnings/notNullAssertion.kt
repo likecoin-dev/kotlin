@@ -1,4 +1,4 @@
-// !DIAGNOSTICS: -UNUSED_EXPRESSION
+// !DIAGNOSTICS: -UNUSED_EXPRESSION -SENSELESS_COMPARISON -UNUSED_PARAMETER
 
 // FILE: p/J.java
 package p;
@@ -41,4 +41,3 @@ fun test() {
     platformN!!
     platformJ!!
 }
-

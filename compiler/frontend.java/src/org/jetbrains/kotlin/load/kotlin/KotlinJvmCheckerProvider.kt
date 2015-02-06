@@ -201,7 +201,7 @@ public class JavaNullabilityWarningsChecker : AdditionalTypeChecker {
             is JetPostfixExpression ->
                     if (expression.getOperationToken() == JetTokens.EXCLEXCL) {
                         val baseExpression = expression.getBaseExpression()
-                        val baseExpressionType = c.trace.get(BindingContext.EXPRESSION_TYPE, baseExpression)
+                        val baseExpressionType = c.trace.get(BindingContext.EXPRESSION_TYPE, baseExpression) ?: return
                         warnIfNotNull(
                                 DataFlowValueFactory.createDataFlowValue(baseExpression, baseExpressionType, c.trace.getBindingContext()),
                                 c
@@ -212,7 +212,7 @@ public class JavaNullabilityWarningsChecker : AdditionalTypeChecker {
             is JetBinaryExpression ->
                     if (expression.getOperationToken() == JetTokens.ELVIS) {
                         val baseExpression = expression.getLeft()
-                        val baseExpressionType = c.trace.get(BindingContext.EXPRESSION_TYPE, baseExpression)
+                        val baseExpressionType = c.trace.get(BindingContext.EXPRESSION_TYPE, baseExpression) ?: return
                         warnIfNotNull(
                                 DataFlowValueFactory.createDataFlowValue(baseExpression, baseExpressionType, c.trace.getBindingContext()),
                                 c

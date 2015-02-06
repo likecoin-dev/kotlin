@@ -74,6 +74,7 @@ import static org.jetbrains.kotlin.lexer.JetTokens.AS_KEYWORD;
 import static org.jetbrains.kotlin.lexer.JetTokens.AS_SAFE;
 import static org.jetbrains.kotlin.resolve.BindingContext.*;
 import static org.jetbrains.kotlin.resolve.DescriptorUtils.getStaticNestedClassesScope;
+import static org.jetbrains.kotlin.resolve.calls.context.ContextDependency.DEPENDENT;
 import static org.jetbrains.kotlin.resolve.calls.context.ContextDependency.INDEPENDENT;
 import static org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowValueFactory.createDataFlowValue;
 import static org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValue.NO_RECEIVER;
@@ -793,8 +794,12 @@ public class BasicExpressionTypingVisitor extends ExpressionTypingVisitor {
             dataFlowInfo = dataFlowInfo.disequate(value, DataFlowValue.NULL);
         }
         // The call to checkType() is only needed here to execute additionalTypeCheckers, hence the NO_EXPECTED_TYPE
+        JetType resultingType = TypeUtils.makeNotNullable(baseType);
+        if (context.contextDependency == DEPENDENT) {
+            return JetTypeInfo.create(resultingType, dataFlowInfo);
+        }
         return DataFlowUtils.checkType(
-                TypeUtils.makeNotNullable(baseType),
+                resultingType,
                 expression,
                 context.replaceExpectedType(NO_EXPECTED_TYPE),
                 dataFlowInfo
@@ -1088,6 +1093,9 @@ public class BasicExpressionTypingVisitor extends ExpressionTypingVisitor {
         // but result is not nullable if the right type is not nullable
         if (!TypeUtils.isNullableType(rightType) && TypeUtils.isNullableType(type)) {
             type = TypeUtils.makeNotNullable(type);
+        }
+        if (context.contextDependency == DEPENDENT) {
+            return JetTypeInfo.create(type, dataFlowInfo);
         }
         return DataFlowUtils.checkType(type, expression, context, dataFlowInfo);
     }
